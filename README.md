@@ -5,3 +5,7 @@ Purpose of this program is to simulate a given breeding strategy using a populat
 breeding.simulator.R contains the source functions which run the simulator
 
 create.base.populations.R - will create multiple base populations in order to use as input to simulator
+
+extract.results folder contains scripts to extract the results from the run.simulator output
+
+run.simulator folder contains scripts to run the simulator with each founder population and a given strategy
