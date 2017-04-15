@@ -313,7 +313,7 @@ for(pop.num in 1:300){ #pop.num specifies the base population to use
   newList <- list("g"=genetic.gain.mine,"gv"=genotypic.variance, "pg"=phenotypic.gain.mine,"si"=mean.select.inbreeding,
                   "pi"=mean.pop.inbreeding,"be"=bulmer.effect, "ct"=coancest.threshold, "maxd"=max.delt.alleles,"mind"=min.delt.alleles,
                   "da"=delt.alleles)
-  the.name <- paste("AGA.64.OP.pop", pop.num, sep="")
+  the.name <- paste("AAA.64.OP.pop", pop.num, sep="")
   assign(x=the.name,value=newList)
   save(list=the.name,file=paste("/media/titan/ARF/results/AAA.64/output/",the.name,".RDA",sep=""))
 }
