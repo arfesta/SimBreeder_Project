@@ -7,7 +7,7 @@ for(i in 1:1000){
   first <- first + 9
 }
 
-for(pop.num in 2:300){
+for(pop.num in 1:300){
 library(parallel)
 ###Create matrices to hold outputs####
 simulations=1; generations=10
