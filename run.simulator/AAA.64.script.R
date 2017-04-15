@@ -1,13 +1,13 @@
 #Source file for breeding simulator####
-source('/media/titan/ARF/Simulator.Package/breeding.simulator.R')
+  source('/media/titan/ARF/Simulator.Package/breeding.simulator.R')
 
 #Create a list of 1000 different sets of 10 seeds for each base population####
-the.seed <- vector("list")
-first <- 1000
-for(i in 1:1000){
-  the.seed[[i]] <- c(seq(first,first+9,1))
-  first <- first + 9
-}
+  the.seed <- vector("list")
+  first <- 1000
+    for(i in 1:1000){
+    the.seed[[i]] <- c(seq(first,first+9,1))
+    first <- first + 9
+    }
 
 #Inputs for simulations####
   NumParents=64
