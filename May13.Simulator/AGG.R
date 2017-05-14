@@ -1,5 +1,5 @@
 #For each base population run the simulator for 10 generations #####
-out <- mclapply(X = as.list(seq(1,100,1)),FUN = function(x){ #pop.num specifies the base population to use
+setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
 
   #Create a list of 1000 different sets of 10 seeds for each base population####
   the.seed <- vector("list")
@@ -8,7 +8,7 @@ out <- mclapply(X = as.list(seq(1,100,1)),FUN = function(x){ #pop.num specifies 
     the.seed[[i]] <- c(seq(first,first+9,1))
     first <- first + 9
   }
-  source('/media/disk6/Adam.Projects/Simulator/breeding.simulator/breeding.simulator2-copy.R')
+  source('./breeding.simulator2-copy.R')
   #Inputs for simulations####
   NumParents=64
   prog.per.cross = 60
@@ -27,7 +27,7 @@ out <- mclapply(X = as.list(seq(1,100,1)),FUN = function(x){ #pop.num specifies 
   indiv.tree.h2 = .3
   ###Load base population####
   pop.num <- x
-  pop.name <- paste("/media/disk6/Adam.Projects/Simulator/base.population/base.population.",pop.num,".RData",sep="")
+  pop.name <- paste("./base.population/base.population.",pop.num,".RData",sep="")
   load(pop.name,envir = .GlobalEnv)
   
 ###Create matrices to hold outputs####
@@ -60,7 +60,7 @@ out <- mclapply(X = as.list(seq(1,100,1)),FUN = function(x){ #pop.num specifies 
   progeny1 <- make.crosses(crossdesign = cross.design, parentinfo = parents, run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny1.TGV <- create.progeny.TGV(crossdesign = cross.design, proginfo = progeny1)
   set.seed(NULL); progeny1.phenos <- create.progeny.phenos(crossdesign = cross.design, progeny.TGV = progeny1.TGV, h2 = indiv.tree.h2)
-  source('/media/disk6/Adam.Projects/Simulator/breeding.simulator/breeding.simulator2-copy.R')
+  source('./select.try.140.3.R')
   pt <- proc.time()
   progeny1.extractions <- extract.selections(num.cores=num.of.cores, parentinfo = OP.parent.phenos, past.tgv = parents.TGV,past.phenos = parents.phenos, 
                                              relmatrix = rel.mat.cross, progenyinfo = progeny1,progenyTGV = progeny1.TGV,progenyphenos = progeny1.phenos,
@@ -326,5 +326,5 @@ out <- mclapply(X = as.list(seq(1,100,1)),FUN = function(x){ #pop.num specifies 
                   "da"=delt.alleles)
   the.name <- paste("AGG.64.OP.pop", pop.num, sep="")
   assign(x=the.name,value=newList)
-  save(list=the.name,file=paste("/media/seagate5/try/",the.name,".RDA",sep=""))
-},mc.cores = 4,mc.cleanup = T)
+  save(list=the.name,file=paste("./",the.name,".RDA",sep=""))
+
