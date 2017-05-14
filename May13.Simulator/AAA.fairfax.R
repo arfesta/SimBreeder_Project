@@ -27,7 +27,7 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   indiv.tree.h2 = .3
   ###Load base population####
   pop.num <- x
-  pop.name <- paste("./base.population/base.population.",pop.num,".RData",sep="")
+  pop.name <- paste("/media/disk6/Adam.Projects/Simulator/base.population/base.population.",pop.num,".RData",sep="")
   load(pop.name,envir = .GlobalEnv)
   
 ###Create matrices to hold outputs####
