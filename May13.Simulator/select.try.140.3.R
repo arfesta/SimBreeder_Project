@@ -335,7 +335,7 @@ extract.selections <- function(num.cores=1, mapinfo=map, crossdesign=cross.desig
         b <- sapply(ss:ncol(allele1),FUN=function(x){
           (length(which(com == allele1[,x])) + length(which(com2 == allele2[,x])))/240
         })
-      },mc.cores = 64,mc.preschedule = F)
+      },mc.cores = 64,mc.preschedule = T, mc.cleanup = F)
       
       diag(g.rel.mat) <- 1
       g.rel.mat[lower.tri(g.rel.mat)] <- unlist(yo)
