@@ -1,24 +1,23 @@
 #For each base population run the simulator for 10 generations #####
 setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
 
-  #Create a list of 1000 different sets of 10 seeds for each base population####
+###Create a list of 1000 different sets of 10 seeds for each base population####
   the.seed <- vector("list")
   first <- 1000
   for(i in 1:1000){
     the.seed[[i]] <- c(seq(first,first+9,1))
     first <- first + 9
   }
-  source('./breeding.simulator2-copy.R')
   #Inputs for simulations####
-  NumParents=140
+  NumParents=64
   prog.per.cross = 60
   af.selection = "ABLUP"
-  wf.selection = "No"
+  wf.selection = "NO"
   sel.strategy = "within.family"
   rel.mat.cross = "pedigree"
-  num.sel.af = 140
+  num.sel.af = 64
   run.in.parallel = T
-  num.of.cores = 24
+  num.of.cores = 15
   
   #Values for alleles and trait variation
   Major.value =1
@@ -26,10 +25,12 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   Dominance.Coeff=1
   indiv.tree.h2 = .3
   ###Load base population####
+  for(x in 1:50){
   pop.num <- x
   pop.name <- paste("/media/disk6/Adam.Projects/Simulator/base.population/base.population.",pop.num,".RData",sep="")
   load(pop.name,envir = .GlobalEnv)
-  
+  source('./breeding.simulator4-copy.R')
+ 
 ###Create matrices to hold outputs####
   simulations=1; generations=10
   genetic.gain.mine <- matrix(data=NA,nrow=simulations,ncol=generations)
@@ -59,10 +60,9 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   cross.design <- create.cross.design(parentinfo = OP.parent.phenos,prog.percross = prog.per.cross,gen = 1,use.op.par.phenos = T)
   progeny1 <- make.crosses(crossdesign = cross.design, parentinfo = parents, run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny1.TGV <- create.progeny.TGV(crossdesign = cross.design, proginfo = progeny1)
-  set.seed(NULL); progeny1.phenos <- create.progeny.phenos(crossdesign = cross.design, progeny.TGV = progeny1.TGV, h2 = indiv.tree.h2)
-  source('./select.try.140.3.R')
+  progeny1.phenos <- create.progeny.phenos(crossdesign = cross.design, progeny.TGV = progeny1.TGV, h2 = indiv.tree.h2)
   pt <- proc.time()
-  progeny1.extractions <- extract.selections(num.cores=num.of.cores, parentinfo = OP.parent.phenos, past.tgv = parents.TGV,past.phenos = parents.phenos, 
+  progeny1.extractions <- ex(num.cores=num.of.cores, parentinfo = OP.parent.phenos, past.tgv = parents.TGV,past.phenos = parents.phenos, 
                                              relmatrix = rel.mat.cross, progenyinfo = progeny1,progenyTGV = progeny1.TGV,progenyphenos = progeny1.phenos,
                                              selection.strategy = sel.strategy, among.family.selection = af.selection, within.family.selection = wf.selection, 
                                              reduced = T,numSelections.among.family = num.sel.af)
@@ -85,10 +85,10 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   progeny2 <- make.crosses(crossdesign=cross.design,parentinfo = progeny1.extractions,run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny2.TGV <- create.progeny.TGV(crossdesign=cross.design,proginfo = progeny2)
   set.seed(NULL); progeny2.phenos <- create.progeny.phenos(crossdesign=cross.design,progeny.TGV = progeny2.TGV, h2 = indiv.tree.h2)
-  progeny2.extractions <- extract.selections(crossdesign=cross.design, past.tgv = progeny1.TGV, relmatrix = rel.mat.cross, num.cores=num.of.cores,
+  progeny2.extractions <- ex(crossdesign=cross.design, past.tgv = progeny1.TGV, relmatrix = rel.mat.cross, num.cores=num.of.cores,
                                              past.phenos = progeny1.phenos, parentinfo = progeny1.extractions,progenyinfo = progeny2,
                                              progenyTGV = progeny2.TGV,progenyphenos = progeny2.phenos,selection.strategy = sel.strategy,
-                                             among.family.selection = af.selection,within.family.selection = wf.selection,numSelections.among.family = num.sel.af,
+                                             among.family.selection = af.selection,within.family.selection = wf.selection,numSelections.among.family = num.sel.af
                                              )
   
   genetic.gain.mine[1,2] <- mean(progeny2.extractions$select.genval)-founder.TGV
@@ -111,7 +111,7 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   progeny3 <- make.crosses(crossdesign=cross.design,parentinfo = progeny2.extractions,run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny3.TGV <- create.progeny.TGV(crossdesign=cross.design,proginfo = progeny3)
   set.seed(NULL); progeny3.phenos <- create.progeny.phenos(crossdesign=cross.design,progeny.TGV = progeny3.TGV,h2 = indiv.tree.h2)
-  progeny3.extractions <- extract.selections(crossdesign=cross.design, past.tgv = progeny2.TGV, relmatrix = rel.mat.cross,
+  progeny3.extractions <- ex(crossdesign=cross.design, past.tgv = progeny2.TGV, relmatrix = rel.mat.cross,
                                              past.phenos = progeny2.phenos, parentinfo = progeny2.extractions,progenyinfo = progeny3,
                                              progenyTGV = progeny3.TGV,progenyphenos = progeny3.phenos,selection.strategy = sel.strategy, 
                                              among.family.selection = af.selection,within.family.selection = wf.selection,numSelections.among.family = num.sel.af,
@@ -137,7 +137,7 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   progeny4 <- make.crosses(crossdesign=cross.design,parentinfo = progeny3.extractions,run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny4.TGV <- create.progeny.TGV(crossdesign=cross.design,proginfo = progeny4)
   set.seed(NULL); progeny4.phenos <- create.progeny.phenos(crossdesign=cross.design,progeny.TGV = progeny4.TGV, h2 = indiv.tree.h2)
-  progeny4.extractions <- extract.selections(crossdesign=cross.design, relmatrix = rel.mat.cross,
+  progeny4.extractions <- ex(crossdesign=cross.design, relmatrix = rel.mat.cross,
                                              past.tgv = progeny3.TGV, past.phenos = progeny3.phenos, parentinfo = progeny3.extractions,
                                              progenyinfo = progeny4, progenyTGV = progeny4.TGV,progenyphenos = progeny4.phenos,
                                              selection.strategy = sel.strategy, 
@@ -164,7 +164,7 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   progeny5 <- make.crosses(crossdesign=cross.design,parentinfo = progeny4.extractions,run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny5.TGV <- create.progeny.TGV(crossdesign=cross.design,proginfo = progeny5)
   set.seed(NULL); progeny5.phenos <- create.progeny.phenos(crossdesign=cross.design,progeny.TGV = progeny5.TGV, h2 = indiv.tree.h2)
-  progeny5.extractions <- extract.selections(crossdesign=cross.design, relmatrix = rel.mat.cross,
+  progeny5.extractions <- ex(crossdesign=cross.design, relmatrix = rel.mat.cross,
                                              past.tgv = progeny4.TGV, past.phenos = progeny4.phenos, parentinfo = progeny4.extractions,
                                              progenyinfo = progeny5, progenyTGV = progeny5.TGV,progenyphenos = progeny5.phenos,
                                              selection.strategy = sel.strategy, 
@@ -191,7 +191,7 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   progeny6 <- make.crosses(crossdesign=cross.design,parentinfo = progeny5.extractions,run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny6.TGV <- create.progeny.TGV(crossdesign=cross.design,proginfo = progeny6)
   set.seed(NULL); progeny6.phenos <- create.progeny.phenos(crossdesign=cross.design,progeny.TGV = progeny6.TGV, h2 = indiv.tree.h2 )
-  progeny6.extractions <- extract.selections(crossdesign=cross.design,relmatrix = rel.mat.cross,
+  progeny6.extractions <- ex(crossdesign=cross.design,relmatrix = rel.mat.cross,
                                              past.tgv = progeny5.TGV, past.phenos = progeny5.phenos, parentinfo = progeny5.extractions,
                                              progenyinfo = progeny6, progenyTGV = progeny6.TGV,progenyphenos = progeny6.phenos,
                                              selection.strategy = sel.strategy, 
@@ -218,7 +218,7 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   progeny7 <- make.crosses(crossdesign=cross.design,parentinfo = progeny6.extractions,run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny7.TGV <- create.progeny.TGV(crossdesign=cross.design,proginfo = progeny7)
   set.seed(NULL); progeny7.phenos <- create.progeny.phenos(crossdesign=cross.design,progeny.TGV = progeny7.TGV, h2 = indiv.tree.h2 )
-  progeny7.extractions <- extract.selections(crossdesign=cross.design,relmatrix = rel.mat.cross,
+  progeny7.extractions <- ex(crossdesign=cross.design,relmatrix = rel.mat.cross,
                                              past.tgv = progeny6.TGV, past.phenos = progeny6.phenos, parentinfo = progeny6.extractions,
                                              progenyinfo = progeny7, progenyTGV = progeny7.TGV,progenyphenos = progeny7.phenos,
                                              selection.strategy = sel.strategy, 
@@ -245,7 +245,7 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   progeny8 <- make.crosses(crossdesign=cross.design,parentinfo = progeny7.extractions,run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny8.TGV <- create.progeny.TGV(crossdesign=cross.design,proginfo = progeny8)
   set.seed(NULL); progeny8.phenos <- create.progeny.phenos(crossdesign=cross.design,progeny.TGV = progeny8.TGV, h2 = indiv.tree.h2)
-  progeny8.extractions <- extract.selections(crossdesign=cross.design,relmatrix = rel.mat.cross,
+  progeny8.extractions <- ex(crossdesign=cross.design,relmatrix = rel.mat.cross,
                                              past.tgv = progeny7.TGV, past.phenos = progeny7.phenos, parentinfo = progeny7.extractions,
                                              progenyinfo = progeny8, progenyTGV = progeny8.TGV,progenyphenos = progeny8.phenos,
                                              selection.strategy = sel.strategy, 
@@ -272,7 +272,7 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   progeny9 <- make.crosses(crossdesign=cross.design,parentinfo = progeny8.extractions,run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny9.TGV <- create.progeny.TGV(crossdesign=cross.design,proginfo = progeny9)
   set.seed(NULL); progeny9.phenos <- create.progeny.phenos(crossdesign=cross.design,progeny.TGV = progeny9.TGV, h2 = indiv.tree.h2)
-  progeny9.extractions <- extract.selections(crossdesign=cross.design,relmatrix = rel.mat.cross,
+  progeny9.extractions <- ex(crossdesign=cross.design,relmatrix = rel.mat.cross,
                                              past.tgv = progeny8.TGV, past.phenos = progeny8.phenos, parentinfo = progeny8.extractions,
                                              progenyinfo = progeny9, progenyTGV = progeny9.TGV,progenyphenos = progeny9.phenos,
                                              selection.strategy = sel.strategy, 
@@ -298,7 +298,7 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   progeny10 <- make.crosses(crossdesign=cross.design,parentinfo = progeny9.extractions,run.parallel = run.in.parallel,num.cores = num.of.cores)
   progeny10.TGV <- create.progeny.TGV(crossdesign=cross.design,proginfo = progeny10)
   set.seed(NULL); progeny10.phenos <- create.progeny.phenos(crossdesign=cross.design,progeny.TGV = progeny10.TGV, h2 = indiv.tree.h2 )
-  progeny10.extractions <- extract.selections(crossdesign=cross.design, relmatrix = rel.mat.cross,
+  progeny10.extractions <- ex(crossdesign=cross.design, relmatrix = rel.mat.cross,
                                               past.tgv = progeny9.TGV, past.phenos = progeny9.phenos, parentinfo = progeny9.extractions,
                                               progenyinfo = progeny10, progenyTGV = progeny10.TGV,progenyphenos = progeny10.phenos,
                                               selection.strategy = sel.strategy, 
@@ -324,7 +324,8 @@ setwd("~/Breeding-Strategy-Simulator/May13.Simulator")
   newList <- list("g"=genetic.gain.mine,"gv"=genotypic.variance, "pg"=phenotypic.gain.mine,"si"=mean.select.inbreeding,
                   "pi"=mean.pop.inbreeding,"be"=bulmer.effect, "ct"=coancest.threshold, "maxd"=max.delt.alleles,"mind"=min.delt.alleles,
                   "da"=delt.alleles)
-  the.name <- paste("AAA.140.OP.pop", pop.num, sep="")
+  the.name <- paste("AAA.64.OP.pop", pop.num, sep="")
   assign(x=the.name,value=newList)
-  save(list=the.name,file=paste("./results/140/",the.name,".RDA",sep=""))
+  save(list=the.name,file=paste("./",the.name,".RDA",sep=""))
+  }
 
