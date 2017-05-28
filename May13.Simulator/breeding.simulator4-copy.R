@@ -1428,40 +1428,29 @@ ex <- function(num.cores=NULL, mapinfo=map, crossdesign=cross.design, past.tgv, 
       allele1 <- cbind(parentmarkers[,,1],prog.1)
       allele2 <- cbind(parentmarkers[,,2],prog.2)
       A <- as.big.matrix(as.matrix(getA(ped)))
+      A = A[match(names(all.phenos),colnames(A)),match(names(all.phenos),colnames(A))]
       #this.order <- match(colnames(allele1),rownames(A))
       #A <- A[c(this.order),c(this.order)]
       #rm(progmarkers,parentmarkers)
-      cor.mat <- matrix(nrow=ncol(allele1),ncol=ncol(allele1))
+      g.rel.mat <- matrix(0,nrow=ncol(allele1),ncol=ncol(allele1))
       for(i in 1:120) {
         these <- unique(allele1[i,])
         for(all in 1:length(these)) {
-          posit <- which(allele1[i,] == these[all])
+          posit <- which(allele1[i,] == these[all] | allele2[i,] == these[all])
           for(each in 1:length(posit)){ 
             fill <- posit[each]
             others <- posit[-c(1:each)]
-            cor.mat[fill,others] <- cor.mat[fill,others] + 1/240
-          }}
-        print(i)}
-      
-      cor.mat2 <- matrix(0,nrow=ncol(allele1),ncol=ncol(allele1))
-      for(i in 1:120) {
-        these <- unique(allele2[i,])
-        for(all in 1:length(these)) {
-          posit <- which(allele2[i,] == these[all])
-          for(each in 1:length(posit)){ 
-            fill <- posit[each]
-            others <- posit[-c(1:each)]
-            cor.mat2[fill,others] <- cor.mat2[fill,others] + 1/240
+            g.rel.mat[fill,others] <- g.rel.mat[fill,others] + 1/240
           }}}
       
-      g.rel.mat <- cor.mat + cor.mat2
-      rm(cor.mat,cor.mat2); gc()
-      diag(g.rel.mat) <- 1
-      diag(g.rel.mat) <- 1
-      g.rel.mat[lower.tri(g.rel.mat)] <- g.rel.mat[upper.tri(g.rel.mat)]
-      rm(allele1,allele2,prog.1,prog.2); gc()
       
-      AI <- .97*g.rel.mat + .03*A
+      diag(g.rel.mat) <- 1
+      upper.lev <- g.rel.mat[upper.tri(g.rel.mat,diag=F)]
+      g.rel.mat <- t(g.rel.mat)
+      g.rel.mat[upper.tri(g.rel.mat)] <- upper.lev
+      rm(allele1,allele2,prog.1,prog.2,upper.lev); gc()
+      
+      AI <- .99*g.rel.mat + .01*as.matrix(A)
       rm(g.rel.mat,A); gc()
       
       s <-  ncol(AI)/8
@@ -1537,6 +1526,7 @@ ex <- function(num.cores=NULL, mapinfo=map, crossdesign=cross.design, past.tgv, 
                          j=c(first.seq[7]:(first.seq[7]+e),first.seq[8]:(first.seq[8]+e)),drop=T]
       }
       rm(AI); gc()
+      {
       s.phenos1 <- all.phenos[c(first.seq[1]:(first.seq[1]+e),first.seq[2]:(first.seq[2]+e))]
       s.phenos2 <- all.phenos[c(first.seq[1]:(first.seq[1]+e),first.seq[3]:(first.seq[3]+e))]
       s.phenos3 <- all.phenos[c(first.seq[1]:(first.seq[1]+e),first.seq[4]:(first.seq[4]+e))]
@@ -1565,10 +1555,10 @@ ex <- function(num.cores=NULL, mapinfo=map, crossdesign=cross.design, past.tgv, 
       s.phenos26 <- all.phenos[c(first.seq[6]:(first.seq[6]+e),first.seq[7]:(first.seq[7]+e))]
       s.phenos27 <- all.phenos[c(first.seq[6]:(first.seq[6]+e),first.seq[8]:(first.seq[8]+e))]
       s.phenos28 <- all.phenos[c(first.seq[7]:(first.seq[7]+e),first.seq[8]:(first.seq[8]+e))]
+      }
       
-      pheno.list <- list(s.phenos1,s.phenos2,s.phenos3,s.phenos4,s.phenos5,s.phenos6,s.phenos7,s.phenos8,s.phenos9,
-                         s.phenos10,s.phenos11,s.phenos12,s.phenos13,s.phenos14,s.phenos15,s.phenos16,s.phenos17,
-                         s.phenos18,s.phenos19,s.phenos20,s.phenos21,s.phenos22,s.phenos23,s.phenos24,s.phenos25,s.phenos26,s.phenos27,s.phenos28)
+      pheno.list <- list(s.phenos1,s.phenos2,s.phenos3,s.phenos4,s.phenos5,s.phenos6,s.phenos7,s.phenos8,s.phenos9,s.phenos10,s.phenos11,s.phenos12,s.phenos13,s.phenos14,s.phenos15,s.phenos16,s.phenos17,s.phenos18,s.phenos19,s.phenos20,s.phenos21,s.phenos22,s.phenos23,s.phenos24,s.phenos25,s.phenos26,s.phenos27,s.phenos28)
+      
       applyMyFun <- function(idx, env) {
         eval(parse(text = paste0("result <- env$", ls(env)[idx])))
         the.data <- as.matrix(result)
@@ -1591,7 +1581,7 @@ ex <- function(num.cores=NULL, mapinfo=map, crossdesign=cross.design, past.tgv, 
       
       the.blups <- mclapply(index,applyMyFun,env = my.env, mc.cores=28)
       rm(my.env);gc()
-      
+      {   
       SG1 <- apply(rbind(the.blups[[1]][1:(length(s.phenos1)/2)],
                          the.blups[[2]][1:(length(s.phenos1)/2)],
                          the.blups[[3]][1:(length(s.phenos1)/2)],
@@ -1655,11 +1645,11 @@ ex <- function(num.cores=NULL, mapinfo=map, crossdesign=cross.design, past.tgv, 
                          the.blups[[25]][((length(s.phenos1)/2)+1):length(s.phenos1)],
                          the.blups[[27]][((length(s.phenos1)/2)+1):length(s.phenos1)],
                          the.blups[[28]][((length(s.phenos1)/2)+1):length(s.phenos1)]),2,mean)
-      
+      }
       gprogeny.blups <- c(SG1,SG2,SG3,SG4,SG5,SG6,SG7,SG8); names(gprogeny.blups) <- names(all.phenos)
       l <- which(names(gprogeny.blups) %in% names(progeny.phenos))
       gprogeny.blups <- gprogeny.blups[l]
-      plot(gprogeny.blups,prog.genetic.values)
+    
       Selections <- vector()
       first.in.family <- 1
       for(family in 1:length(cross.design[,3])){
@@ -1750,20 +1740,21 @@ ex <- function(num.cores=NULL, mapinfo=map, crossdesign=cross.design, past.tgv, 
     allele1 <- all.markers[,,1]
     allele2 <- all.markers[,,2]
     
-    numS <- ncol(allele1)
-    g.rel.mat <- matrix(NA,nrow=numS,ncol=numS)
-    yo <- lapply(1:(numS-1),FUN = function(x){
-      com <- allele1[,x]
-      com2 <- allele2[,x]
-      ss <- x + 1
-      b <- sapply(ss:ncol(allele1),FUN=function(x){
-        (length(which(com == allele1[,x])) + length(which(com2 == allele2[,x])))/240
-      })
-    })
+    g.rel.mat <- matrix(0,nrow=ncol(allele1),ncol=ncol(allele1))
+    for(i in 1:120) {
+      these <- unique(allele1[i,])
+      for(all in 1:length(these)) {
+        posit <- which(allele1[i,] == these[all] | allele2[i,] == these[all])
+        for(each in 1:length(posit)){ 
+          fill <- posit[each]
+          others <- posit[-c(1:each)]
+          g.rel.mat[fill,others] <- g.rel.mat[fill,others] + 1/240
+        }}}
+    
     diag(g.rel.mat) <- 1
-    g.rel.mat[lower.tri(g.rel.mat)] <- unlist(yo)
+    upper.lev <- g.rel.mat[upper.tri(g.rel.mat,diag=F)]
     g.rel.mat <- t(g.rel.mat)
-    g.rel.mat[lower.tri(g.rel.mat)] <- unlist(yo)
+    g.rel.mat[upper.tri(g.rel.mat)] <- upper.lev
     
     rownames(g.rel.mat) <- colnames(allele1); 
     colnames(g.rel.mat) <- colnames(allele1)
