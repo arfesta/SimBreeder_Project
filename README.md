@@ -4,5 +4,3 @@ Purpose of this package is to simulate a given breeding strategy using a user sp
 # Download Package file:
 SimBreeder.zip -- Can be installed through R Studio
 
-# NOTE: Package is still under development...
- If planning to use please contact me at arfesta@ncsu.edu
