@@ -1,5 +1,5 @@
 # SimBreeder
-Purpose of this program is to simulate a given breeding strategy using a population with a genetic architecture set up by the user.  There are a multitude of user adjustable inputs, cross design strategies, and selection methods which can be implemented over 10 generations.
+Purpose of this package is to simulate a given breeding strategy using a user specified genetic architecture.  There are a variety of adjustable paramters including mating strategies and selection methods which can be implemented over many generations.
 
 # Download Package file:
 SimBreeder.zip -- Can be installed through R Studio
