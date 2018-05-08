@@ -1,100 +1,57 @@
 # SimBreeder
 Purpose of this package is to simulate a given breeding strategy using a user specified genetic architecture.  There are a variety of adjustable paramters including mating strategies and selection methods which can be implemented over many generations.
 
-# Download:
+**Download**
 [SimBreeder.zip](https://github.com/arfesta/SimBreeder/blob/master/simbreeder.zip)
 
 # Table of contents:
 
-[Simulation of a genetic map (make\_genetic\_map)
-2](#simulation-of-a-genetic-map-make_genetic_map)
+- [SimBreeder](#simbreeder)
+- [Simulation of a genetic map (make\_genetic\_map)](#simulation-of-a-genetic-map--make--genetic--map-)
+  * [Determining size of linkage groups](#determining-size-of-linkage-groups)
+  * [Types of Loci](#types-of-loci)
+  * [Distribution of Loci](#distribution-of-loci)
+  * [Intervals and recombination rates](#intervals-and-recombination-rates)
+  * [Minor Allele Frequencies](#minor-allele-frequencies)
+- [Creation of founder populations (create\_parents)](#creation-of-founder-populations--create--parents-)
+  * [Allelic values](#allelic-values)
+    + [\*Inbred Parents](#--inbred-parents)
+  * [Assignment of alleles](#assignment-of-alleles)
+    + [\*Heterozygous markers](#--heterozygous-markers)
+    + [\*Modeling unrelated founders of an outcrossing species](#--modeling-unrelated-founders-of-an-outcrossing-species)
+- [Generation of cross design (create\_cross\_design)](#generation-of-cross-design--create--cross--design-)
+  * [General Mating Designs](#general-mating-designs)
+    + [Cross file input](#cross-file-input)
+    + [Self](#self)
+    + [Random Mating](#random-mating)
+    + [Half-Diallel](#half-diallel)
+  * [Ranked Mating designs](#ranked-mating-designs)
+    + [Co-ancestry threshold](#co-ancestry-threshold)
+    + [Ranking scheme](#ranking-scheme)
+    + [Single-Pair](#single-pair)
+    + [Assortative Mating](#assortative-mating)
+  * [Output](#output)
+- [Simulated recombination (make\_crosses)](#simulated-recombination--make--crosses-)
+- [Calculation of genetic values (calc\_TGV)](#calculation-of-genetic-values--calc--tgv-)
+- [Simulation of phenotypes (sim\_phenos)](#simulation-of-phenotypes--sim--phenos-)
+- [*Progeny Selection* (extract\_selections)](#-progeny-selection---extract--selections-)
+  * [Selection strategy](#selection-strategy)
+    + [Phenotypes](#phenotypes)
+    + [GBLUP](#gblup)
+      - [Creation of genomic relationship matrix](#creation-of-genomic-relationship-matrix)
+      - [Estimation of BLUPs](#estimation-of-blups)
+    + [ABLUP](#ablup)
+  * [Output](#output-1)
+    + [Inbreeding estimates](#inbreeding-estimates)
+    + [Producing relationship matrix of selections](#producing-relationship-matrix-of-selections)
+- [Open Pollination Testing (op\_testing)](#open-pollination-testing--op--testing-)
 
-[Determining size of linkage groups
-2](#determining-size-of-linkage-groups)
 
-[Types of Loci 2](#types-of-loci)
-
-[Distribution of Loci 3](#distribution-of-loci)
-
-[Intervals and recombination rates
-3](#intervals-and-recombination-rates)
-
-[Minor Allele Frequencies 3](#minor-allele-frequencies)
-
-[Creation of founder populations (create\_parents)
-5](#creation-of-founder-populations-create_parents)
-
-[Allelic values 5](#allelic-values)
-
-[\*Inbred Parents 5](#inbred-parents)
-
-[Assignment of alleles 6](#assignment-of-alleles)
-
-[\*Heterozygous markers 6](#heterozygous-markers)
-
-[\*Modeling unrelated founders of an outcrossing species
-6](#modeling-unrelated-founders-of-an-outcrossing-species)
-
-[Generation of cross design (create\_cross\_design)
-7](#generation-of-cross-design-create_cross_design)
-
-[General Mating Designs 7](#general-mating-designs)
-
-[Cross file input 7](#cross-file-input)
-
-[Self 8](#self)
-
-[Random Mating 8](#random-mating)
-
-[Half-Diallel 8](#half-diallel)
-
-[Ranked Mating designs 8](#ranked-mating-designs)
-
-[Co-ancestry threshold 8](#co-ancestry-threshold)
-
-[Ranking scheme 8](#ranking-scheme)
-
-[Single-Pair 9](#single-pair)
-
-[Assortative Mating 9](#assortative-mating)
-
-[Output 10](#output)
-
-[Simulated recombination (make\_crosses)
-11](#simulated-recombination-make_crosses)
-
-[Calculation of genetic values (calc\_TGV)
-13](#calculation-of-genetic-values-calc_tgv)
-
-[Simulation of phenotypes (sim\_phenos)
-15](#simulation-of-phenotypes-sim_phenos)
-
-[*Progeny Selection* (extract\_selections)
-16](#progeny-selection-extract_selections)
-
-[Selection strategy 17](#selection-strategy)
-
-[Phenotypes 17](#phenotypes)
-
-[GBLUP 17](#gblup)
-
-[ABLUP 19](#ablup)
-
-[Output 19](#output-1)
-
-[Inbreeding estimates 20](#inbreeding-estimates)
-
-[Producing relationship matrix of selections
-21](#producing-relationship-matrix-of-selections)
-
-[Open Pollination Testing (op\_testing)
-22](#open-pollination-testing-op_testing)
-
-Simulation of a genetic map (make\_genetic\_map)
+# Simulation of a genetic map
 ================================================
 
   User required inputs   
-  ---------------------- ------------------------------------------------------------------------------------------------------------------------------------------
+------- -----------------------------------------------------------------------------------------------------------------------------
   num.lgs                Number of linkage groups
   map.length             Total genetic map length in centimorgans
   num.markers            Number of genetic makers
