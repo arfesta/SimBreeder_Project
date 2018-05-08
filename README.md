@@ -1050,4 +1050,3 @@ using a subset of parents ranked by OP family mean phenotypes.
   *marker.matrix*    Matrix containing bi-allelic SNP markers (see calc\_TGV)
   *pars*             Vector containing the sorted OP family mean phenotypes
   *phenos*           Vector containing phenotypes of parents
-
