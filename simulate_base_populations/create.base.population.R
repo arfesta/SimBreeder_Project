@@ -1,22 +1,28 @@
-for(pop.num in 301:1000){
-set.seed(Sys.time())
-#Create base population for comparisons
-#Load package####
-source('/media/titan/ARF/Simulator.Package/breeding.simulator.R')
-#Create Genetic Map####
-map <- create.map(num.markers=120,numSNPQTL = 1960, numchromos = 12, maplength = 1800, totalQTL=2500,
-                  totalloci = signif((120+2500)/12,digits = 2)*12,chromosomesizerange = .2)
-parents <- create.parents(mapinfo=map, numparents = 280,max.delt.allele = 14,heterozygous.markers = T)
-parents.TGV <- create.parents.TGV(parents=parents,mapinfo=map,A=1,a=-100,dom.coeff = 1)
-rm(.Random.seed);parents.phenos <- create.parents.phenos(parents.TGV = parents.TGV, h2 = .3)
-Env.var <- sqrt(var(parents.TGV$genetic.values)/.3)
-founder.gvar <- var(parents.TGV$genetic.values)
-founder.TGV <- mean(parents.TGV$genetic.values)
-founder.phenos <- mean(parents.phenos$phenos)
-
-
-OP.parent.phenos <- select.OP.Phenotype.Values(mapinfo=map, parentinfo = parents, parents.TGV = parents.TGV,
-                                               parent.phenos = parents.phenos,num.select = 280,crossprog=1, dom.coeff = 1,
-                                               A=1,a=-100, h2=.3 , run.parallel = T, n.cores = 20)
-pop.name <- paste("/media/titan/ARF/base.population/base.population.",pop.num,".RData",sep="")
-save.image(file = pop.name)}
+# Generate starting base populations ####
+source('/mnt/simulator/create_map.R')
+source('/mnt/simulator/create_parents.R')
+source('/mnt/simulator/calc_TGV.R')
+source('/mnt/simulator/sim_phenos.R')
+library(parallel);set.seed(448234)
+seed.vector <- sample(1235:4536345,size = 300,replace =F) 
+rm(.Random.seed)
+mclapply(1:300,function(pop){
+  set.seed(seed.vector[pop])
+  genetic.map <- create_genetic_map(num.chromos = 12,map.length = 1800,num.markers = 120,total.qtl = 2640,num.snpqtl = 1960,
+                                    distribute.loci = "even",marker.distribution = "equally-spaced",snp.qtl.maf = c(0.01,0.02))
+  parents <- create_parents(map.info = genetic.map,num.parents = 280,max.delt.allele = 14,par.markers.unique = T,heterozygous.markers = T)
+  parents.TGV <- calc_TGV(geno.info = parents,map.info = genetic.map,A = 1,a = -100,dom.coeff = 0,founder = T)
+  parents.phenos <- sim_phenos(TGV.object = parents.TGV,h2 = .3)
+  founder.h2 <- var(parents.phenos$genetic.values)/var(parents.phenos$phenos)
+  E.sd <- sqrt((var(parents.phenos$genetic.values)/founder.h2) - var(parents.phenos$genetic.values))
+  
+  this.pop <- paste0("/mnt/data_v2/base_populations/","base_population_",pop,".RData")
+  base_pop_data <- list(
+   "genetic.map" = genetic.map,
+    "parents" = parents,
+    "parents.TGV"=parents.TGV,
+    "parents.phenos"=parents.phenos,
+    "founder.h2"=founder.h2,
+    "E.sd"=E.sd)
+  save(base_pop_data,file = this.pop,compress = T)
+  },mc.cores=30)
