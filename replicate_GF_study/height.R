@@ -3,34 +3,35 @@ source('/mnt/simulator/sim_phenos.R')
 source('/mnt/simulator/create_cross_design.R')
 source('/mnt/simulator/make_crosses.R')
 source('/mnt/simulator/calc_TGV.R')
-source('/mnt/extract_selections.new2.R')
+source('/mnt/simulator/extract_selections.R')
 source('/mnt/simulator/create_map.R')
 source('/mnt/simulator/create_parents.R')
 source('/mnt/simulator/OP_testing.R')
 
 ## Height
-D=1
+D=0
 minor=-100
 set.seed(435634)
 map <- create_genetic_map(num.chromos = 12,map.length = 1800,num.markers = 540,total.qtl = 2520,num.snpqtl = 1960,
                           distribute.loci ="even",marker.distribution = "equally-spaced",snp.qtl.maf = c(0.01,0.02))
 parents <- create_parents(map.info = map,num.parents = 50,max.delt.allele = 14,heterozygous.markers = F)
+parent.tgv <- calc_TGV(geno.info = parents,map.info = map,founder = T,A = 1,a = minor,dom.coeff = D)
 parent.phenos <- sim_phenos(TGV.object = parent.tgv,h2 = .3)
-first.gen.cross <- create_cross_design(parent.info = parents,mating.design = "cross.file.input",cross.file = "./graham_study/g.study.1stgen.txt",generation = 1)
-first.prog <- make_crosses(parent.info = parents,map.info = map,cross.design = first.gen.cross,num.cores = 30)
+first.gen.cross <- create_cross_design(parent.info = parents,mating.design = "cross.file.input",cross.file = "/mnt/graham_study/g.study.1stgen.txt",generation = 1)
+first.prog <- make_crosses(parent.info = parents,map.info = map,cross.design = first.gen.cross,num.cores = parallel::detectCores())
 first.prog.tgv <- calc_TGV(geno.info = first.prog,map.info  = map,cross.design = first.gen.cross,A = 1,a = minor,dom.coeff = D)
 first.prog.phenos <- sim_phenos(TGV.object = first.prog.tgv,h2 = .3)
 
-prog.ex1 <- extract_selections(among.family.selection = "Phenotype",map.info = map,cross.design =  first.gen.cross,past.tgv = parent.tgv,past.phenos = parent.phenos,parent.info = parents,
+prog.ex1 <- extract_selections(among.family.selection = "Phenotype",relationship.matrix.type = "pedigree",map.info = map,cross.design =  first.gen.cross,past.tgv = parent.tgv,past.phenos = parent.phenos,parent.info = parents,
                                progeny.info = first.prog,progeny.TGV = first.prog.tgv,progeny.phenos = first.prog.phenos,
                                num.selections.within.family = 1, 
                                num.selections.among.family = 40)
 selections <- sort(as.numeric(names(prog.ex1$selection.phenos)))
-second.gen.cross <- read.table("./graham_study/g.2nd.gen.ped2.txt")
+second.gen.cross <- read.table("/mnt/graham_study/g.2nd.gen.ped2.txt")
 second.gen.cross <- cbind(selections[second.gen.cross[,1]],selections[second.gen.cross[,2]],second.gen.cross[,3])
-write.table(second.gen.cross,"./g.2nd.gen.ped.txt",row.names = F,col.names = F)
-second.gen.cross <-create_cross_design(parent.info = prog.ex1,mating.design = "cross.file.input",cross.file = "g.2nd.gen.ped.txt",generation = 2) 
-second.prog <- make_crosses(parent.info = prog.ex1,map.info = map,cross.design = second.gen.cross,num.cores = 30)
+write.table(second.gen.cross,"./g.2nd.gen.pedv2.txt",row.names = F,col.names = F)
+second.gen.cross <-create_cross_design(parent.info = prog.ex1,mating.design = "cross.file.input",cross.file = "./g.2nd.gen.pedv2.txt",generation = 2) 
+second.prog <- make_crosses(parent.info = prog.ex1,map.info = map,cross.design = second.gen.cross,num.cores = parallel::detectCores())
 second.prog.tgv <- calc_TGV(geno.info = second.prog,map.info = map,cross.design = second.gen.cross,A = 1,a = minor,dom.coeff = D)
 second.prog.phenos <- sim_phenos(TGV.object = second.prog.tgv,h2 = .3)
 
