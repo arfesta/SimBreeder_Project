@@ -1,4 +1,4 @@
-# Generate starting base populations ####
+# Run this on Domino ####
 source('/mnt/simulator/create_map.R')
 source('/mnt/simulator/create_parents.R')
 source('/mnt/simulator/calc_TGV.R')
@@ -26,3 +26,4 @@ mclapply(1:300,function(pop){
     "E.sd"=E.sd)
   save(base_pop_data,file = this.pop,compress = T)
   },mc.cores=30)
+
