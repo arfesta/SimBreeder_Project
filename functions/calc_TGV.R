@@ -15,59 +15,75 @@
 #' parents.TGV <- calc_TGV(geno.info = parents,map.info = genetic.map,A = 1,a = -100,dom.coeff = 0,founder = T)
 
 ####Create TGV2####
-calc_TGV <- function(geno.info, map.info, cross.design=NULL, A,a, dom.coeff, founder=F, rqtl.dom=NULL,par.markers.unique=F){
-
-  QTLSNPs <- which(map.info$types %in% c("snpqtl"))      # A vector of the loci which are snpqtl
+calc_TGV <- function(geno.info, map.info, cross.design=NULL, A,a, dom.coeff, founder=F, rqtl.dom=NULL){
+  
+  QTLSNPs <- map.info$QTLSNP.loci      # A vector of the loci which are snpqtl
   QTLSNP.num <- geno.info$genos.3d[QTLSNPs,,] # genotypes of both alleles pulled from the current generation
-  markers <- which(map.info$types %in% c("m"))# a list of all the markers pulled from map object
+  markers <- which(map.info$genetic.map$types %in% c("m"))# a list of all the markers pulled from map object
   num.markers <- length(markers) # length of markers that were selected
   marker.select.genos <- geno.info$genos.3d[markers,,] # genotypes of the markers pulled from the current generation
-  map.markers <- map.info[markers,c("chr","pos")]
-  num.QTL <- length(which(map.info$types %in% c("qtl"))  ) # the number of additive qtl
-  rQTL <- which(map.info$types %in% c("qtl"))  # the number of additive qtl
-
+  map.markers <- map.info$genetic.map[markers,c("chr","pos")]
+  num.QTL <- length(which(map.info$genetic.map$types %in% c("qtl"))  ) # the number of additive qtl
+  rQTL <- which(map.info$genetic.map$types %in% c("qtl"))  # the number of additive qtl
+  
   if(founder == F) {par.IDs <- cross.design$parent.IDs} else {  par.IDs <- geno.info$parent.IDs}
   length.prog <- length(par.IDs)
-
+  
   num.SNPQTL <- length(QTLSNPs)
   num.parents <- length(par.IDs) # the number of parents
   marker.values <- matrix(NA,nrow=num.markers,ncol=num.parents) # matrix to hold marker values
-  capital.genotypes <- vector()
-  lowercase.genotypes <- vector()
-  for (i in 1:26){
-    capital.genotypes <- c(capital.genotypes,paste(LETTERS[i],LETTERS, sep=""))
-    lowercase.genotypes <-  c(lowercase.genotypes,paste(letters[i],letters, sep=""))}
-
+  #capital.genotypes <- vector()
+  #lowercase.genotypes <- vector()
+  #for (i in 1:26){
+  #  capital.genotypes <- c(capital.genotypes,paste(LETTERS[i],LETTERS, sep=""))
+  #  lowercase.genotypes <-  c(lowercase.genotypes,paste(letters[i],letters, sep=""))}
+  
   # Dominance coefficient *h* of 1 means bad allele dominance, 0 mean good allele dominance
-    difference <- A-a
-    QTLSNPaa <- sapply(1:length.prog,function(x){
-      A*length(which(QTLSNP.num[,x,1]=="a" & QTLSNP.num[,x,2]=="a"))},simplify = T)
-    QTLSNPcc <- sapply(1:length.prog,function(x){
-      a*length(which(QTLSNP.num[,x,1]=="c" & QTLSNP.num[,x,2]=="c"))},simplify = T)
-    QTLSNPac <- sapply(1:length.prog,function(x){
-      (A-(difference*dom.coeff))  * length(which(QTLSNP.num[,x,1]=="a" & QTLSNP.num[,x,2]=="c"|QTLSNP.num[,x,1]=="c" & QTLSNP.num[,x,2]=="a"))},simplify = T)
+  #difference <- A-a
+  QTLSNPaa <- sapply(1:length.prog,function(x){
+    A*length(which(QTLSNP.num[,x,1]=="a" & QTLSNP.num[,x,2]=="a"))},simplify = T)
+  QTLSNPcc <- sapply(1:length.prog,function(x){
+    a*length(which(QTLSNP.num[,x,1]=="c" & QTLSNP.num[,x,2]=="c"))},simplify = T)
+  
+  if(dom.coeff == 1){
+    QTLSNPac <- sapply(1:length.prog,function(x){ 
+      A  * (
+        length(which(QTLSNP.num[,x,1]=="a" & QTLSNP.num[,x,2]=="c")) +
+          length(which(QTLSNP.num[,x,1]=="c" & QTLSNP.num[,x,2]=="a"))
+      )
+    },simplify = T)
+  }
   
   QTLSNP.values <- QTLSNPaa+QTLSNPcc+QTLSNPac
-if(par.markers.unique == T){
-  markers.aa <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c(LETTERS,capital.genotypes) & marker.select.genos[,x,2] %in% c(LETTERS,capital.genotypes))})
-  markers.cc <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c(letters,lowercase.genotypes) & marker.select.genos[,x,2] %in% c(letters,lowercase.genotypes))})
-  markers.ac <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c(LETTERS,capital.genotypes) & marker.select.genos[,x,2] %in% c(letters,lowercase.genotypes))})
-  markers.ca <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c(letters,lowercase.genotypes) & marker.select.genos[,x,2] %in% c(LETTERS,capital.genotypes))})
-} else {
-  markers.aa <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c("G") & marker.select.genos[,x,2] %in% c("G"))})
-  markers.cc <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c("g") & marker.select.genos[,x,2] %in% c("g"))})
-  markers.ac <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c("G") & marker.select.genos[,x,2] %in% c("g"))})
-  markers.ca <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c("g") & marker.select.genos[,x,2] %in% c("G"))})
-}
+  #if( length(which(map.info$genetic.map$types == "fi")) > 0){
+  #  fi_genos <-   geno.info$genos.3d[which(map.info$genetic.map$types == "fi"),,] # genotypes of the markers pulled from the current generation
+  #  capital.genotypes <- vector()
+  #  lowercase.genotypes <- vector()
+  #  for (i in 1:26){
+  #    capital.genotypes <- c(capital.genotypes,paste(LETTERS[i],LETTERS, sep=""))
+  #    lowercase.genotypes <-  c(lowercase.genotypes,paste(letters[i],letters, sep=""))
+  #    }
+  #  markers.aa <-   lapply(1:length.prog,function(x){which(fi_genos[,x,1] %in% c(LETTERS,capital.genotypes) & fi_genos[,x,2] %in% c(LETTERS,capital.genotypes))})
+  #  markers.cc <-   lapply(1:length.prog,function(x){which(fi_genos[,x,1] %in% c(letters,lowercase.genotypes) & fi_genos[,x,2] %in% c(letters,lowercase.genotypes))})
+  #  markers.ac <-   lapply(1:length.prog,function(x){which(fi_genos[,x,1] %in% c(LETTERS,capital.genotypes) & fi_genos[,x,2] %in% c(letters,lowercase.genotypes))})
+  #  markers.ca <-   lapply(1:length.prog,function(x){which(fi_genos[,x,1] %in% c(letters,lowercase.genotypes) & fi_genos[,x,2] %in% c(LETTERS,capital.genotypes))})
+  #} 
+  if( length(which(map.info$genetic.map$types == "m")) > 0){
+    marker.select.genos <- geno.info$genos.3d[which(map.info$genetic.map$types == "m"),,]
+    markers.aa <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c("G") & marker.select.genos[,x,2] %in% c("G"))})
+    markers.cc <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c("g") & marker.select.genos[,x,2] %in% c("g"))})
+    markers.ac <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c("G") & marker.select.genos[,x,2] %in% c("g"))})
+    markers.ca <-   lapply(1:length.prog,function(x){which(marker.select.genos[,x,1] %in% c("g") & marker.select.genos[,x,2] %in% c("G"))})
+  }
   
-  marker.values <- matrix(NA,nrow=num.markers,ncol=length.prog) # matrix to hold marker values
-
+  marker.values <- matrix(NA,nrow=nrow(marker.select.genos),ncol=length.prog) # matrix to hold marker values
+  
   for(i in 1:length.prog){
     marker.values[markers.aa[[i]],i] <- "0"
     marker.values[markers.cc[[i]],i] <- "2"
     marker.values[markers.ac[[i]],i] <- "1"
     marker.values[markers.ca[[i]],i] <- "1"}
-
+  
   marker.values <- t(marker.values)
   colnames(marker.values) <- markers
   rownames(marker.values) <- par.IDs
@@ -92,9 +108,9 @@ if(par.markers.unique == T){
     for(each.rqtl in 1:length(rqtl.dom.coes)){
       rqtl.dom.1 <- c(rqtl.dom.1,rep(rqtl.dom.coes[each.rqtl],rqtl.dom.number[each.rqtl]))
     }
-
+    
     fill.vector[rqt1.better.than.rqtl2] <- unlist(par.QTL.allele1)[c(rqt1.better.than.rqtl2)] -(fill.vector[rqt1.better.than.rqtl2]*rqtl.dom[rqtl.dom.1])
-  
+    
     rqtl.dom.coes <- c(1:length(rqtl.dom))
     rqtl.dom.coes <- rqtl.dom.coes[which(rqtl.dom.coes %in% as.numeric(names(table(ceiling(rqt2.better.than.rqtl1/ncol(par.QTL.allele1))))))]
     rqtl.dom.number <- table(ceiling(rqt2.better.than.rqtl1/ncol(par.QTL.allele1)))
@@ -105,12 +121,12 @@ if(par.markers.unique == T){
     fill.vector[rqt2.better.than.rqtl1] <- unlist(par.QTL.allele2)[c(rqt2.better.than.rqtl1)] -(fill.vector[rqt2.better.than.rqtl1]*rqtl.dom[rqtl.dom.1])
     
     fill.vector <- colSums(matrix(fill.vector,nrow=num.QTL,ncol=length.prog))
-   genetic.values <-  QTLSNP.values + fill.vector
-    } else {
-  genetic.values <- QTLSNP.values + colSums( matrix(as.integer(geno.info$genos.3d[rQTL,,1]),nrow=num.QTL,ncol=length.prog)) + colSums(matrix(as.integer(geno.info$genos.3d[rQTL,,2]),nrow=num.QTL,ncol=length.prog))
-    }
+    genetic.values <-  QTLSNP.values + fill.vector
+  } else {
+    genetic.values <- QTLSNP.values + colSums( matrix(as.integer(geno.info$genos.3d[rQTL,,1]),nrow=num.QTL,ncol=length.prog)) + colSums(matrix(as.integer(geno.info$genos.3d[rQTL,,2]),nrow=num.QTL,ncol=length.prog))
+  }
   names(genetic.values) <- par.IDs
-
+  
   TGV <- list(genetic.values=genetic.values, SNP.value.matrix=QTLSNP.values,markers.matrix=marker.values, marker.loci=markers, marker.map=map.markers)
   return(TGV)
-  }
+}
