@@ -15,24 +15,24 @@ make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.c
   library(parallel); library(abind)
   cross_design <- cross.design$cross.design
   num.crosses <- as.numeric(nrow(cross_design))
-  num.chromos <- length(unique(map.info$chr))
+  num.chromos <- length(unique(map.info$genetic.map$chr))
   last.locus.per.chrom <- vector()
   for(each in 1:num.chromos){
-    this.chr <- map.info$loci[which(map.info$chr == unique(map.info$chr)[each])]
-    last.locus.per.chrom <- c(last.locus.per.chrom,which(map.info$loci == this.chr[length(this.chr)]))
+    this.chr <- map.info$genetic.map$loci[which(map.info$genetic.map$chr == unique(map.info$genetic.map$chr)[each])]
+    last.locus.per.chrom <- c(last.locus.per.chrom,which(map.info$genetic.map$loci == this.chr[length(this.chr)]))
   }
   loci.per.chromo <- unlist(lapply(1:num.chromos,function(x){
     this.chrom <- paste0("chr",x)
-    length(which(map.info$chr == this.chrom))
+    length(which(map.info$genetic.map$chr == this.chrom))
   }))
   chromo.last.loci.index <-  unlist(lapply(1:num.chromos,function(x) {
     this.chrom <- paste0("chr",x)
-    max(which(map.info$chr == this.chrom))
+    max(which(map.info$genetic.map$chr == this.chrom))
   }))
   
   gametes1 <- mclapply(1:num.crosses,function(x){
     chromo.loci.index <- last.locus.per.chrom   # The last number of each loci for all chromsomes
-    QTLSNPs      <- which(map.info$types %in% c("snpqtl"))      # A vector of the loci which are snpqtl
+    QTLSNPs      <- which(map.info$genetic.map$types %in% c("snpqtl"))      # A vector of the loci which are snpqtl
     
     par1<-match(cross_design[x,1],unique(colnames(parent.info$genos.3d))) # assigns par1 to be the first parent in cross.design matrix
     par2<-match(cross_design[x,2],unique(colnames(parent.info$genos.3d))) # assigns par2 to be the second parent in the cross.design matrix
@@ -41,7 +41,7 @@ make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.c
     # Create empty matrix to hold gametes
     # dimensions are (total # of loci) x  (# of cross progeny)
     # rownames are the loci names
-    gametes1<-matrix(rep(NA,nrow(map.info)*cross.prog),nrow=nrow(map.info),ncol=cross.prog,dimnames=list(map.info$loci,NULL))
+    gametes1<-matrix(rep(NA,nrow(map.info$genetic.map)*cross.prog),nrow=nrow(map.info$genetic.map),ncol=cross.prog,dimnames=list(map.info$genetic.map$loci,NULL))
     
     if(length(dim(parent.info$genos.3d)) == 2) { par1.alleles <- parent.info$genos.3d; par2.alleles <- parent.info$genos.3d} else {
       par1.alleles <- (parent.info$genos.3d[,par1,])
@@ -54,9 +54,9 @@ make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.c
       
       for(i in 1:length(chromo.last.loci.index)){ # Now for each chromosome do the following
         last.pos <- chromo.last.loci.index[i]     # Subset the last position of this chromosome
-        l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$recfreqs[(first.pos+1):last.pos])) == 1)
+        l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$genetic.map$recfreqs[(first.pos+1):last.pos])) == 1)
         while(length(l) < 1){   # If none were less than rec. freq, sample again
-          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$recfreqs[(first.pos+1):last.pos])) == 1)
+          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$genetic.map$recfreqs[(first.pos+1):last.pos])) == 1)
         }
         ch.r[[i]] <- seq(first.pos,last.pos,1)[l+1] # Now subest those positions from the loci to find which loci will recombine
         first.pos <- last.pos+ 1  # The first position will now be the last + 1
@@ -89,11 +89,11 @@ make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.c
     }
     
     gametes1
-  },mc.cores=num.cores)
+  },mc.cores=num.cores,mc.set.seed=F)
   gametes1 <- matrix(unlist(gametes1), ncol = num.crosses*mean(as.numeric(cross_design[,3])))
   gametes2 <- mclapply(1:num.crosses,function(x){
     chromo.loci.index <- last.locus.per.chrom   # The last number of each loci for all chromsomes
-    QTLSNPs      <- which(map.info$types %in% c("snpqtl"))      # A vector of the loci which are snpqtl
+    QTLSNPs      <- which(map.info$genetic.map$types %in% c("snpqtl"))      # A vector of the loci which are snpqtl
     
     par1<-match(cross_design[x,1],unique(colnames(parent.info$genos.3d))) # assigns par1 to be the first parent in cross_design matrix
     par2<-match(cross_design[x,2],unique(colnames(parent.info$genos.3d))) # assigns par2 to be the second parent in the cross_design matrix
@@ -102,7 +102,7 @@ make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.c
     # Create empty matrix to hold gametes
     # dimensions are (total # of loci) x  (# of cross progeny)
     # rownames are the loci names
-    gametes2<-matrix(rep(NA,nrow(map.info)*cross.prog),nrow=nrow(map.info),ncol=cross.prog,dimnames=list(map.info$loci,NULL))
+    gametes2<-matrix(rep(NA,nrow(map.info$genetic.map)*cross.prog),nrow=nrow(map.info$genetic.map),ncol=cross.prog,dimnames=list(map.info$genetic.map$loci,NULL))
     if(length(dim(parent.info$genos.3d)) == 2) { par1.alleles <- parent.info$genos.3d; par2.alleles <- parent.info$genos.3d} else {
       par1.alleles <- (parent.info$genos.3d[,par1,])
       par2.alleles <- (parent.info$genos.3d[,par2,])}
@@ -114,9 +114,9 @@ make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.c
       
       for(i in 1:length(chromo.last.loci.index)){ # Now for each chromosome do the following
         last.pos <- chromo.last.loci.index[i]     # Subset the last position of this chromosome
-        l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$recfreqs[(first.pos+1):last.pos])) == 1)
+        l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$genetic.map$recfreqs[(first.pos+1):last.pos])) == 1)
         while(length(l) < 1){   # If none were less than rec. freq, sample again
-          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$recfreqs[(first.pos+1):last.pos])) == 1)
+          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$genetic.map$recfreqs[(first.pos+1):last.pos])) == 1)
         }
         ch.r[[i]] <- seq(first.pos,last.pos,1)[l+1] # Now subest those positions from the loci to find which loci will recombine
         first.pos <- last.pos+ 1  # The first position will now be the last + 1
@@ -149,7 +149,7 @@ make_crosses <- function(parent.info,map.info,cross.design, num.cores = num.of.c
     }
     
     gametes2
-  },mc.cores=num.cores)
+  },mc.cores=num.cores,mc.set.seed=F)
   gametes2 <- matrix(unlist(gametes2), ncol = num.crosses*mean(as.numeric(cross_design[,3])))
   genos.3d <- abind(gametes1,gametes2,along = 3)
   colnames(genos.3d) <- cross.design$progeny.pedigree[,1]
