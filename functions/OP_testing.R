@@ -46,21 +46,21 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
   
   ### Data for calculating gval ####    
   # Subset the number of chromosome
-  num.chromos = as.numeric(length(unique(map.info$chr)))
+  num.chromos = as.numeric(length(unique(map.info$genetic.map$chr)))
   
   # Get index of last loci for each chromosome
   chromo.last.loci.index <-  unlist(lapply(1:num.chromos,function(x) {
     this.chrom <- paste0("chr",x)
-    max(which(map.info$chr == this.chrom))
+    max(which(map.info$genetic.map$chr == this.chrom))
   }))
   
   # Vector of loci which are snpqtl
-  QTLSNPs      <- which(map.info$types == "snpqtl")
+  QTLSNPs      <- which(map.info$genetic.map$types == "snpqtl")
   
   # determine number of loci per chromosome
   loci.per.chromo <- unlist(lapply(1:num.chromos,function(x){
     this.chrom <- paste0("chr",x)
-    length(which(map.info$chr == this.chrom))
+    length(which(map.info$genetic.map$chr == this.chrom))
   }))
   
   ### Estimate genetic value for each cross #### 
@@ -76,8 +76,8 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
     # Create empty matrix to hold gametes
     # dimensions are (total # of loci) x  (# of cross progeny)
     # rownames are the loci names
-    gametes1<-matrix(rep(NA,nrow(map.info)*cross.prog),nrow=nrow(map.info),ncol=cross.prog,dimnames=list(map.info$loci,NULL))
-    gametes2<-matrix(rep(NA,nrow(map.info)*cross.prog),nrow=nrow(map.info),ncol=cross.prog,dimnames=list(map.info$loci,NULL))
+    gametes1<-matrix(rep(NA,nrow(map.info$genetic.map)*cross.prog),nrow=nrow(map.info$genetic.map),ncol=cross.prog,dimnames=list(map.info$genetic.map$loci,NULL))
+    gametes2<-matrix(rep(NA,nrow(map.info$genetic.map)*cross.prog),nrow=nrow(map.info$genetic.map),ncol=cross.prog,dimnames=list(map.info$genetic.map$loci,NULL))
     
     par1.alleles <- (parent.info$genos.3d[,par1,])
     par2.alleles <- (parent.info$genos.3d[,par2,])
@@ -90,9 +90,9 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
       ch.r <- vector("list")   # Create empty vector list to hold recombination spots
       for(i in 1:length(chromo.last.loci.index)){ # Now for each chromosome do the following
         last.pos <- chromo.last.loci.index[i]     # Subset the last position of this chromosome
-        l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
+        l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$genetic.map$dist[(first.pos+1):last.pos])) == 1)
         while(length(l) < 1){   # If none were less than rec. freq, sample again
-          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
+          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$genetic.map$dist[(first.pos+1):last.pos])) == 1)
         }
         ch.r[[i]] <- seq(first.pos,last.pos,1)[l+1] # Now subest those positions from the loci to find which loci will recombine
         first.pos <- last.pos+ 1  # The first position will now be the last + 1
@@ -133,9 +133,9 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
       
       for(i in 1:length(chromo.last.loci.index)){ # Now for each chromosome do the following
         last.pos <- chromo.last.loci.index[i]     # Subset the last position of this chromosome
-        l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
+        l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$genetic.map$dist[(first.pos+1):last.pos])) == 1)
         while(length(l) < 1){   # If none were less than rec. freq, sample again
-          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$dist[(first.pos+1):last.pos])) == 1)
+          l <- which((rbinom(n = (first.pos+1):last.pos,size = 1, prob = map.info$genetic.map$dist[(first.pos+1):last.pos])) == 1)
         }
         ch.r[[i]] <- seq(first.pos,last.pos,1)[l+1] # Now subest those positions from the loci to find which loci will recombine
         first.pos <- last.pos+ 1  # The first position will now be the last + 1
@@ -168,10 +168,10 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
     }
     array.out <- abind(gametes1,gametes2,along=3)
     
-    locus.names <- map.info$loci # The locus names pulled from the mab object
-    QTLSNPs      <- which(map.info$types == "snpqtl")    # vector of the loci which are snpqtl
+    locus.names <- map.info$genetic.map$loci # The locus names pulled from the mab object
+    QTLSNPs      <- which(map.info$genetic.map$types == "snpqtl")    # vector of the loci which are snpqtl
     QTLSNP.num <- array.out[QTLSNPs,,] # genotypes of both alleles pulled from the current generation
-    rQTL.loci      <- which(map.info$types == "qtl")
+    rQTL.loci      <- which(map.info$genetic.map$types == "qtl")
     num.QTL <- length(rQTL.loci) # the number of additive qtl
     
     # Create 2 matrices: One to hold snpqtl values for all parents and the other to hold marker marker values for blup analysis
@@ -179,10 +179,21 @@ OP_testing <- function(map.info,parent.info,parent.phenos,parents.TGV,cross.prog
     QTLSNP.values <-matrix(NA,nrow=num.SNPQTL,ncol=1) # matrix to hold snpqtl values
     
     # Dominance coefficient *h* of 1 means bad allele dominance, 0 mean good allele dominance
-    difference <- A-a
     QTLSNPaa <- A*length(which(QTLSNP.num[,1]=="a" & QTLSNP.num[,2]=="a"))
     QTLSNPcc <- a*length(which(QTLSNP.num[,1]=="c" & QTLSNP.num[,2]=="c"))
-    QTLSNPac <- (A-(difference*dom.coeff))  * length(which(QTLSNP.num[,1]=="a" & QTLSNP.num[,2]=="c"|QTLSNP.num[,1]=="c" & QTLSNP.num[,2]=="a"))
+    if(dom.coeff == 1){
+      QTLSNPac <- (a)  * length(which(QTLSNP.num[,1]=="a" & QTLSNP.num[,2]=="c"|QTLSNP.num[,1]=="c" & QTLSNP.num[,2]=="a"))
+    }
+    if(dom.coeff == 0){
+      QTLSNPac <-  (A)  * length(which(QTLSNP.num[,1]=="a" & QTLSNP.num[,2]=="c"|QTLSNP.num[,1]=="c" & QTLSNP.num[,2]=="a"))
+    }
+    if(dom.coeff > 0 & dom.coeff < 1){
+      QTLSNPac <- 
+        (A*(1-dom.coeff))  * length(which(QTLSNP.num[,x,1]=="a" & QTLSNP.num[,2]=="c"|QTLSNP.num[,1]=="c" & QTLSNP.num[,2]=="a"))
+       +
+          (a*(dom.coeff))  * length(which(QTLSNP.num[,x,1]=="a" & QTLSNP.num[,2]=="c"|QTLSNP.num[,1]=="c" & QTLSNP.num[,2]=="a"))
+    }
+    
     
     QTLSNP.values <- QTLSNPaa+QTLSNPcc+QTLSNPac
     
